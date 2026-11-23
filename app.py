@@ -27,7 +27,7 @@ def calculate(h: int, oh: int) -> tuple[int, str]:
     return water, acidity
 
 
-# 이온 선택 버튼 & 천천히 끝까지 떨어지는 물방울(💧) 애니메이션 CSS
+# 이온 선택 버튼 & 중앙에서 사방으로 퍼지는 물방울(💧) 애니메이션 CSS
 st.markdown(
     """
 <style>
@@ -38,29 +38,28 @@ div[data-testid="column"] button {
     border-radius: 14px !important;
 }
 
-@keyframes dropFallSlow {
+@keyframes waterBurst {
     0% {
-        top: -10vh;
-        transform: scale(0.9);
+        transform: translate(-50%, -50%) scale(0.3);
         opacity: 1;
     }
-    85% {
+    70% {
         opacity: 1;
     }
     100% {
-        top: 110vh;
-        transform: scale(1.1);
+        transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.4);
         opacity: 0;
     }
 }
 
-.water-drop {
+.water-burst {
     position: fixed;
-    top: -10vh;
-    font-size: 30px;
+    left: 50%;
+    top: 45%;
+    font-size: 34px;
     z-index: 9999;
     pointer-events: none;
-    animation: dropFallSlow 3.2s linear forwards;
+    animation: waterBurst 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 </style>
 """,
@@ -104,29 +103,40 @@ with st.container(border=True):
     st.write("")
     clicked = st.button("🔍 알아보기", type="primary", use_container_width=True)
 
-# 4. 버튼 클릭 시: 게이지 100% 완료 후 물방울 낙하 + calculate(h, oh) 실행
+# 4. 버튼 클릭 시: 게이지 100% 완료 후 물방울만 짜잔! 퍼짐 + calculate(h, oh) 실행
 if clicked:
     # 게이지가 0%부터 100%까지 부드럽게 끝까지 차오름
     progress_bar = st.progress(0, text="🧪 H⁺와 OH⁻가 반응하는 중... (0%)")
     for percent in range(1, 101):
-        time.sleep(0.012)  # 약 1.2초 동안 1%씩 부드럽게 증가
+        time.sleep(0.012)
         progress_bar.progress(
             percent, text=f"🧪 H⁺와 OH⁻가 반응하는 중... ({percent}%)"
         )
 
-    time.sleep(0.25)  # 100% 도달 상태를 잠깐 보여준 뒤
-    progress_bar.empty()  # 게이지 바 제거
+    time.sleep(0.2)
+    progress_bar.empty()
 
-    # 화면 위에서 파란 물방울(💧)들이 천천히 끝까지 떨어지는 효과
-    drops_html = "".join(
-        f'<div class="water-drop" style="left:{left}%; animation-delay:{delay}s;">💧</div>'
-        for left, delay in [
-            (8, 0.0), (18, 0.3), (28, 0.1), (38, 0.45), (48, 0.2),
-            (58, 0.5), (68, 0.15), (78, 0.35), (88, 0.05), (94, 0.4),
-        ]
+    # 화면 중앙에서 12개의 물방울(💧)이 사방(360도)으로 짜잔! 퍼지는 효과
+    burst_items = [
+        ("💧", "-180px", "-140px"),
+        ("💧", "-90px", "-190px"),
+        ("💧", "0px", "-210px"),
+        ("💧", "90px", "-190px"),
+        ("💧", "180px", "-140px"),
+        ("💧", "210px", "-20px"),
+        ("💧", "170px", "120px"),
+        ("💧", "70px", "180px"),
+        ("💧", "-70px", "180px"),
+        ("💧", "-170px", "120px"),
+        ("💧", "-210px", "-20px"),
+        ("💧", "0px", "0px"),
+    ]
+    burst_html = "".join(
+        f'<div class="water-burst" style="--dx:{dx}; --dy:{dy};">{icon}</div>'
+        for icon, dx, dy in burst_items
     )
-    st.markdown(drops_html, unsafe_allow_html=True)
-    st.toast("중화 반응 완료! 물(H₂O) 분자가 생성되었습니다.", icon="💧")
+    st.markdown(burst_html, unsafe_allow_html=True)
+    st.toast("물(H₂O) 분자가 생성되었습니다.", icon="💧")
 
     results = []
     other_ion_col = "OH⁻" if is_h else "H⁺"
