@@ -42,21 +42,21 @@ st.write("### 1. 기준이 될 이온을 선택하세요")
 col1, col2 = st.columns(2)
 
 with col1:
-    btn_type1 = (
-        "primary"
-        if st.session_state.selected_ion == "수소 이온 (H⁺)"
-        else "secondary"
-    )
+    if st.session_state.selected_ion == "수소 이온 (H⁺)":
+        btn_type1 = "primary"
+    else:
+        btn_type1 = "secondary"
+
     if st.button("🔴 수소 이온 (H⁺)", use_container_width=True, type=btn_type1):
         st.session_state.selected_ion = "수소 이온 (H⁺)"
         st.rerun()
 
 with col2:
-    btn_type2 = (
-        "primary"
-        if st.session_state.selected_ion == "수산화 이온 (OH⁻)"
-        else "secondary"
-    )
+    if st.session_state.selected_ion == "수산화 이온 (OH⁻)":
+        btn_type2 = "primary"
+    else:
+        btn_type2 = "secondary"
+
     if st.button(
         "🔵 수산화 이온 (OH⁻)", use_container_width=True, type=btn_type2
     ):
@@ -74,17 +74,17 @@ input_count = st.slider(
     label_visibility="collapsed",
 )
 
-st.write("")  # 여백 추가
+st.write("")
 
 # 4. [알아보기] 버튼을 눌렀을 때만 아래 계산 및 출력 실행
 if st.button("🔍 알아보기", type="primary", use_container_width=True):
     unselected_list = list(range(1, 11))
     results = []
 
-    # 선택하지 않은 이온의 열 이름을 'OH⁻' 또는 'H⁺'로 설정
-    unselected_col_name = (
-        "OH⁻" if st.session_state.selected_ion == "수소 이온 (H⁺)" else "H⁺"
-    )
+    if st.session_state.selected_ion == "수소 이온 (H⁺)":
+        unselected_col_name = "OH⁻"
+    else:
+        unselected_col_name = "H⁺"
 
     for other_count in unselected_list:
         if st.session_state.selected_ion == "수소 이온 (H⁺)":
@@ -96,62 +96,6 @@ if st.button("🔍 알아보기", type="primary", use_container_width=True):
 
         water, acidity = calculate(h, oh)
 
-        # 요청하신 3열 순서: [H⁺ 또는 OH⁻] -> [생성된 물 분자 수] -> [혼합 용액의 액성]
-        results.append({
-            unselected_col_name: other_count,
-            "생성된 물 분자 수": water,
-            "혼합 용액의 액성": acidity,
-        })
-
-    st.divider()
-    st.write(
-        f"### 📊 결과 ({st.session_state.selected_ion} {input_count}개 기준)"
-    )
-    df = pd.DataFrame(results)
-    st.dataframe(df, use_container_width=True, hide_index=True)
-
-        else "secondary"
-    )
-    if st.button(
-        "🔵 수산화 이온 (OH⁻)", use_container_width=True, type=btn_type2
-    ):
-        st.session_state.selected_ion = "수산화 이온 (OH⁻)"
-        st.rerun()
-
-# 3. 이온 개수 입력 (0 ~ 10 슬라이더)
-st.write("### 2. 이온 개수를 선택하세요 (0 ~ 10개)")
-input_count = st.slider(
-    "이온 개수",
-    min_value=0,
-    max_value=10,
-    value=5,
-    step=1,
-    label_visibility="collapsed",
-)
-
-st.write("")  # 여백 추가
-
-# 4. [알아보기] 버튼을 눌렀을 때만 아래 계산 및 출력 실행
-if st.button("🔍 알아보기", type="primary", use_container_width=True):
-    unselected_list = list(range(1, 11))
-    results = []
-
-    # 선택하지 않은 이온의 열 이름을 'oh' 또는 'h'로 설정
-    unselected_col_name = (
-        "oh" if st.session_state.selected_ion == "수소 이온 (H⁺)" else "h"
-    )
-
-    for other_count in unselected_list:
-        if st.session_state.selected_ion == "수소 이온 (H⁺)":
-            h = input_count
-            oh = other_count
-        else:
-            h = other_count
-            oh = input_count
-
-        water, acidity = calculate(h, oh)
-
-        # 요청하신 3열 순서: [h 또는 oh] -> [생성된 물 분자 수] -> [혼합 용액의 액성]
         results.append({
             unselected_col_name: other_count,
             "생성된 물 분자 수": water,
