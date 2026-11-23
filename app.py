@@ -81,6 +81,11 @@ if st.button("🔍 알아보기", type="primary", use_container_width=True):
     unselected_list = list(range(1, 11))
     results = []
 
+    # 선택하지 않은 이온의 열 이름을 'oh' 또는 'h'로 설정
+    unselected_col_name = (
+        "oh" if st.session_state.selected_ion == "수소 이온 (H⁺)" else "h"
+    )
+
     for other_count in unselected_list:
         if st.session_state.selected_ion == "수소 이온 (H⁺)":
             h = input_count
@@ -91,9 +96,9 @@ if st.button("🔍 알아보기", type="primary", use_container_width=True):
 
         water, acidity = calculate(h, oh)
 
+        # 요청하신 3열 순서: [h 또는 oh] -> [생성된 물 분자 수] -> [혼합 용액의 액성]
         results.append({
-            "수소 이온(H⁺) 수": h,
-            "수산화 이온(OH⁻) 수": oh,
+            unselected_col_name: other_count,
             "생성된 물 분자 수": water,
             "혼합 용액의 액성": acidity,
         })
