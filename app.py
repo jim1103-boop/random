@@ -28,10 +28,18 @@ def calculate(h: int, oh: int) -> tuple[int, str]:
     return water, acidity
 
 
-# 이온 선택 버튼 & 화면 전체로 퍼지는 물방울(💧) + 중화열(🔥) 애니메이션 CSS
+# 제목 한 줄 고정 + 이온 선택 버튼 + 화면 전체 물방울/열기 애니메이션 CSS
 st.markdown(
     """
 <style>
+.main-title {
+    font-size: clamp(1.4rem, 4vw, 2.2rem);
+    font-weight: 800;
+    white-space: nowrap;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
 div[data-testid="column"] button {
     height: 75px;
     font-size: 20px !important;
@@ -82,7 +90,8 @@ div[data-testid="column"] button {
     unsafe_allow_html=True,
 )
 
-st.title("🧪 산·염기 중화 반응 탐구 시뮬레이터")
+# 한 줄 고정 제목 출력
+st.markdown('<div class="main-title">🧪 산·염기 중화 반응 탐구 시뮬레이터</div>', unsafe_allow_html=True)
 st.latex(r"\text{H}^+ + \text{OH}^- \longrightarrow \text{H}_2\text{O} + \text{열(중화열)}")
 
 if "selected_ion" not in st.session_state:
@@ -131,7 +140,6 @@ if clicked:
     time.sleep(0.2)
     progress_bar.empty()
 
-    # 0개보다 클 때만 물방울과 중화열 발생 (0개일 때는 반응이 일어나지 않으므로 생략)
     if input_count > 0:
         burst_divs = ['<div class="heat-overlay"></div>']
         for ring_idx, (count, dist_x, dist_y, delay) in enumerate([
