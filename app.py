@@ -1,3 +1,4 @@
+import altair as alt
 import pandas as pd
 import streamlit as st
 
@@ -5,7 +6,7 @@ import streamlit as st
 st.set_page_config(page_title="중화 반응 탐구 시뮬레이터", page_icon="🧪", layout="centered")
 
 # 2. 리스트 선언: 선택하지 않은 이온의 개수(1~10개) 리스트로 정의
-unselected_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+unselected_list =
 
 
 # 함수(def) 및 조건 판단(if-elif-else) 정의
@@ -87,7 +88,7 @@ if clicked:
             "혼합 용액의 액성": acidity,
         })
 
-    # 5. 출력: 표 형태로 구성하여 화면에 출력
+    # 5. 출력: 표 및 인터랙티브 그래프 출력
     df = pd.DataFrame(results)
 
     st.write("")
@@ -107,7 +108,31 @@ if clicked:
             st.dataframe(df, use_container_width=True, hide_index=True)
 
         with tab2:
-            st.caption(f"넣어준 {other_ion_col} 개수에 따른 생성된 물 분자(H₂O) 수 변화")
-            chart_data = df.set_index(other_ion_col)[["생성된 물 분자 수"]]
-            st.line_chart(chart_data)
-            st.info(f"💡 **{other_ion_col}가 {input_count}개**일 때 완전히 중화되며, 이후에는 기준 이온이 모두 소모되어 물 분자 수가 더 이상 증가하지 않습니다.")
+            st.caption(f"그래프의 각 점을 누르거나 마우스를 올리면 혼합 용액의 액성을 확인할 수 있습니다.")
+
+            # 꺾은선 + 액성별 색상 점 그래프 생성
+            line = alt.Chart(df).mark_line(color="#888888").encode(
+                x=alt.X(f"{other_ion_col}:Q", scale=alt.Scale(domain=[1, 10]), axis=alt.Axis(tickMinStep=1, title=f"넣어준 {other_ion_col} 수 (개)")),
+                y=alt.Y("생성된 물 분자 수:Q", scale=alt.Scale(domain=[0, 10]), axis=alt.Axis(tickMinStep=1, title="생성된 물 분자 수 (개)")),
+            )
+
+            points = alt.Chart(df).mark_circle(size=140).encode(
+                x=f"{other_ion_col}:Q",
+                y="생성된 물 분자 수:Q",
+                color=alt.Color(
+                    "혼합 용액의 액성:N",
+                    scale=alt.Scale(
+                        domain=["🔴 산성", "🟢 중성", "🔵 염기성"],
+                        range=["#FF4B4B", "#21C354", "#1C83E1"],
+                    ),
+                    legend=alt.Legend(title="액성"),
+                ),
+                tooltip=[
+                    alt.Tooltip(other_ion_col, title=f"{other_ion_col} 수 (개)"),
+                    alt.Tooltip("생성된 물 분자 수", title="생성된 물 분자 수 (개)"),
+                    alt.Tooltip("혼합 용액의 액성", title="혼합 용액의 액성"),
+                ],
+            )
+
+            st.altair_chart((line + points).interactive(), use_container_width=True)
+            st.info(f"💡 **{other_ion_col}가 {input_count}개**일 때 중화점(🟢 중성)에 도달하며, 이후에는 기준 이온이 모두 소모되어 물 분자 수가 더 이상 증가하지 않습니다.")
