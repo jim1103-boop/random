@@ -1,3 +1,4 @@
+import time
 import altair as alt
 import pandas as pd
 import streamlit as st
@@ -8,7 +9,7 @@ st.set_page_config(
 )
 
 # 2. 리스트 선언: 선택하지 않은 이온의 개수(1~10개) 리스트로 정의
-unselected_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+unselected_list = list(range(1, 11))
 
 
 # 함수(def) 및 조건 판단(if-elif-else) 정의
@@ -26,7 +27,7 @@ def calculate(h: int, oh: int) -> tuple[int, str]:
     return water, acidity
 
 
-# 이온 선택 버튼 스타일 설정
+# 이온 선택 버튼 & 떨어지는 물방울(💧) 애니메이션 CSS
 st.markdown(
     """
 <style>
@@ -35,6 +36,19 @@ div[data-testid="column"] button {
     font-size: 20px !important;
     font-weight: bold !important;
     border-radius: 14px !important;
+}
+
+@keyframes dropFall {
+    0% { transform: translateY(-10vh) scale(0.8); opacity: 1; }
+    100% { transform: translateY(105vh) scale(1.2); opacity: 0; }
+}
+.water-drop {
+    position: fixed;
+    top: -5%;
+    font-size: 28px;
+    z-index: 9999;
+    pointer-events: none;
+    animation: dropFall 1.6s ease-in forwards;
 }
 </style>
 """,
@@ -78,8 +92,26 @@ with st.container(border=True):
     st.write("")
     clicked = st.button("🔍 알아보기", type="primary", use_container_width=True)
 
-# 4. 버튼 클릭 시: 리스트를 순회하며 calculate(h, oh) 실행
+# 4. 버튼 클릭 시: 물방울 애니메이션 + calculate(h, oh) 실행
 if clicked:
+    # 게이지 바가 차오르는 짧은 반응 연출
+    progress_bar = st.progress(0, text="🧪 H⁺와 OH⁻가 만나 물 분자를 생성하는 중...")
+    for percent in range(0, 101, 25):
+        time.sleep(0.1)
+        progress_bar.progress(percent, text="🧪 H⁺와 OH⁻가 만나 물 분자를 생성하는 중...")
+    progress_bar.empty()
+
+    # 화면 위에서 파란 물방울(💧)들이 떨어지는 효과
+    drops_html = "".join(
+        f'<div class="water-drop" style="left:{left}%; animation-delay:{delay}s;">💧</div>'
+        for left, delay in [
+            (10, 0.0), (22, 0.15), (35, 0.05), (48, 0.2),
+            (60, 0.1), (73, 0.25), (85, 0.05), (92, 0.18),
+        ]
+    )
+    st.markdown(drops_html, unsafe_allow_html=True)
+    st.toast("물(H₂O) 분자 생성 완료!", icon="💧")
+
     results = []
     other_ion_col = "OH⁻" if is_h else "H⁺"
 
@@ -126,7 +158,6 @@ if clicked:
                 "그래프의 각 점을 누르거나 마우스를 올리면 혼합 용액의 액성을 확인할 수 있습니다."
             )
 
-            # 꺾은선 + 액성별 색상 점 그래프 생성
             line = (
                 alt.Chart(df)
                 .mark_line(color="#888888")
