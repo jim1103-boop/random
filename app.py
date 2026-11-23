@@ -1,3 +1,4 @@
+import math
 import time
 import altair as alt
 import pandas as pd
@@ -27,7 +28,7 @@ def calculate(h: int, oh: int) -> tuple[int, str]:
     return water, acidity
 
 
-# 이온 선택 버튼 & 중앙에서 사방으로 퍼지는 물방울(💧) 애니메이션 CSS
+# 이온 선택 버튼 & 화면 전체(vw, vh)로 시원하게 퍼지는 물방울(💧) CSS
 st.markdown(
     """
 <style>
@@ -38,16 +39,16 @@ div[data-testid="column"] button {
     border-radius: 14px !important;
 }
 
-@keyframes waterBurst {
+@keyframes fullScreenBurst {
     0% {
-        transform: translate(-50%, -50%) scale(0.3);
+        transform: translate(-50%, -50%) scale(0.4);
         opacity: 1;
     }
-    70% {
+    75% {
         opacity: 1;
     }
     100% {
-        transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.4);
+        transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.8);
         opacity: 0;
     }
 }
@@ -55,11 +56,11 @@ div[data-testid="column"] button {
 .water-burst {
     position: fixed;
     left: 50%;
-    top: 45%;
-    font-size: 34px;
+    top: 50%;
+    font-size: 40px;
     z-index: 9999;
     pointer-events: none;
-    animation: waterBurst 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: fullScreenBurst 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 </style>
 """,
@@ -103,7 +104,7 @@ with st.container(border=True):
     st.write("")
     clicked = st.button("🔍 알아보기", type="primary", use_container_width=True)
 
-# 4. 버튼 클릭 시: 게이지 100% 완료 후 물방울만 짜잔! 퍼짐 + calculate(h, oh) 실행
+# 4. 버튼 클릭 시: 게이지 100% 완료 후 화면 전체로 물방울이 짜잔! 퍼짐
 if clicked:
     # 게이지가 0%부터 100%까지 부드럽게 끝까지 차오름
     progress_bar = st.progress(0, text="🧪 H⁺와 OH⁻가 반응하는 중... (0%)")
@@ -116,26 +117,22 @@ if clicked:
     time.sleep(0.2)
     progress_bar.empty()
 
-    # 화면 중앙에서 12개의 물방울(💧)이 사방(360도)으로 짜잔! 퍼지는 효과
-    burst_items = [
-        ("💧", "-180px", "-140px"),
-        ("💧", "-90px", "-190px"),
-        ("💧", "0px", "-210px"),
-        ("💧", "90px", "-190px"),
-        ("💧", "180px", "-140px"),
-        ("💧", "210px", "-20px"),
-        ("💧", "170px", "120px"),
-        ("💧", "70px", "180px"),
-        ("💧", "-70px", "180px"),
-        ("💧", "-170px", "120px"),
-        ("💧", "-210px", "-20px"),
-        ("💧", "0px", "0px"),
-    ]
-    burst_html = "".join(
-        f'<div class="water-burst" style="--dx:{dx}; --dy:{dy};">{icon}</div>'
-        for icon, dx, dy in burst_items
-    )
-    st.markdown(burst_html, unsafe_allow_html=True)
+    # 360도 전 방향으로 3겹(안쪽/중간/바깥쪽) 총 36개 물방울이 화면 전체(vw, vh)로 퍼짐
+    burst_divs = []
+    for ring_idx, (count, dist_x, dist_y, delay) in enumerate([
+        (10, 22, 22, 0.0),    # 안쪽 원
+        (12, 38, 38, 0.08),   # 중간 원
+        (14, 55, 55, 0.15),   # 바깥쪽 큰 원 (화면 끝까지 도달)
+    ]):
+        for i in range(count):
+            angle = (2 * math.pi / count) * i + (ring_idx * 0.3)
+            dx = f"{math.cos(angle) * dist_x:.1f}vw"
+            dy = f"{math.sin(angle) * dist_y:.1f}vh"
+            burst_divs.append(
+                f'<div class="water-burst" style="--dx:{dx}; --dy:{dy}; animation-delay:{delay}s;">💧</div>'
+            )
+
+    st.markdown("".join(burst_divs), unsafe_allow_html=True)
     st.toast("물(H₂O) 분자가 생성되었습니다.", icon="💧")
 
     results = []
