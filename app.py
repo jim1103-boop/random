@@ -3,10 +3,12 @@ import pandas as pd
 import streamlit as st
 
 # 1. 시작: 페이지 기본 설정
-st.set_page_config(page_title="중화 반응 탐구 시뮬레이터", page_icon="🧪", layout="centered")
+st.set_page_config(
+    page_title="중화 반응 탐구 시뮬레이터", page_icon="🧪", layout="centered"
+)
 
 # 2. 리스트 선언: 선택하지 않은 이온의 개수(1~10개) 리스트로 정의
-unselected_list =
+unselected_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 
 # 함수(def) 및 조건 판단(if-elif-else) 정의
@@ -51,17 +53,27 @@ with st.container(border=True):
     col1, col2 = st.columns(2)
     is_h = st.session_state.selected_ion == "수소 이온 (H⁺)"
 
-    if col1.button("🔴 수소 이온 (H⁺)", use_container_width=True, type="primary" if is_h else "secondary"):
+    if col1.button(
+        "🔴 수소 이온 (H⁺)",
+        use_container_width=True,
+        type="primary" if is_h else "secondary",
+    ):
         st.session_state.selected_ion = "수소 이온 (H⁺)"
         st.rerun()
 
-    if col2.button("🔵 수산화 이온 (OH⁻)", use_container_width=True, type="primary" if not is_h else "secondary"):
+    if col2.button(
+        "🔵 수산화 이온 (OH⁻)",
+        use_container_width=True,
+        type="primary" if not is_h else "secondary",
+    ):
         st.session_state.selected_ion = "수산화 이온 (OH⁻)"
         st.rerun()
 
     st.write("")
     st.markdown("##### 2️⃣ 기준 이온 개수 선택 (1 ~ 10개)")
-    input_count = st.slider("이온 개수", 1, 10, 5, label_visibility="collapsed")
+    input_count = st.slider(
+        "이온 개수", 1, 10, 5, label_visibility="collapsed"
+    )
 
     st.write("")
     clicked = st.button("🔍 알아보기", type="primary", use_container_width=True)
@@ -93,7 +105,9 @@ if clicked:
 
     st.write("")
     with st.container(border=True):
-        st.subheader(f"📊 실험 결과 ({st.session_state.selected_ion} {input_count}개 기준)")
+        st.subheader(
+            f"📊 실험 결과 ({st.session_state.selected_ion} {input_count}개 기준)"
+        )
 
         m1, m2, m3 = st.columns(3)
         m1.metric("기준 이온 수", f"{input_count}개")
@@ -108,31 +122,63 @@ if clicked:
             st.dataframe(df, use_container_width=True, hide_index=True)
 
         with tab2:
-            st.caption(f"그래프의 각 점을 누르거나 마우스를 올리면 혼합 용액의 액성을 확인할 수 있습니다.")
+            st.caption(
+                "그래프의 각 점을 누르거나 마우스를 올리면 혼합 용액의 액성을 확인할 수 있습니다."
+            )
 
             # 꺾은선 + 액성별 색상 점 그래프 생성
-            line = alt.Chart(df).mark_line(color="#888888").encode(
-                x=alt.X(f"{other_ion_col}:Q", scale=alt.Scale(domain=[1, 10]), axis=alt.Axis(tickMinStep=1, title=f"넣어준 {other_ion_col} 수 (개)")),
-                y=alt.Y("생성된 물 분자 수:Q", scale=alt.Scale(domain=[0, 10]), axis=alt.Axis(tickMinStep=1, title="생성된 물 분자 수 (개)")),
-            )
-
-            points = alt.Chart(df).mark_circle(size=140).encode(
-                x=f"{other_ion_col}:Q",
-                y="생성된 물 분자 수:Q",
-                color=alt.Color(
-                    "혼합 용액의 액성:N",
-                    scale=alt.Scale(
-                        domain=["🔴 산성", "🟢 중성", "🔵 염기성"],
-                        range=["#FF4B4B", "#21C354", "#1C83E1"],
+            line = (
+                alt.Chart(df)
+                .mark_line(color="#888888")
+                .encode(
+                    x=alt.X(
+                        f"{other_ion_col}:Q",
+                        scale=alt.Scale(domain=[1, 10]),
+                        axis=alt.Axis(
+                            tickMinStep=1, title=f"넣어준 {other_ion_col} 수 (개)"
+                        ),
                     ),
-                    legend=alt.Legend(title="액성"),
-                ),
-                tooltip=[
-                    alt.Tooltip(other_ion_col, title=f"{other_ion_col} 수 (개)"),
-                    alt.Tooltip("생성된 물 분자 수", title="생성된 물 분자 수 (개)"),
-                    alt.Tooltip("혼합 용액의 액성", title="혼합 용액의 액성"),
-                ],
+                    y=alt.Y(
+                        "생성된 물 분자 수:Q",
+                        scale=alt.Scale(domain=[0, 10]),
+                        axis=alt.Axis(
+                            tickMinStep=1, title="생성된 물 분자 수 (개)"
+                        ),
+                    ),
+                )
             )
 
-            st.altair_chart((line + points).interactive(), use_container_width=True)
-            st.info(f"💡 **{other_ion_col}가 {input_count}개**일 때 중화점(🟢 중성)에 도달하며, 이후에는 기준 이온이 모두 소모되어 물 분자 수가 더 이상 증가하지 않습니다.")
+            points = (
+                alt.Chart(df)
+                .mark_circle(size=140)
+                .encode(
+                    x=f"{other_ion_col}:Q",
+                    y="생성된 물 분자 수:Q",
+                    color=alt.Color(
+                        "혼합 용액의 액성:N",
+                        scale=alt.Scale(
+                            domain=["🔴 산성", "🟢 중성", "🔵 염기성"],
+                            range=["#FF4B4B", "#21C354", "#1C83E1"],
+                        ),
+                        legend=alt.Legend(title="액성"),
+                    ),
+                    tooltip=[
+                        alt.Tooltip(
+                            other_ion_col, title=f"{other_ion_col} 수 (개)"
+                        ),
+                        alt.Tooltip(
+                            "생성된 물 분자 수", title="생성된 물 분자 수 (개)"
+                        ),
+                        alt.Tooltip(
+                            "혼합 용액의 액성", title="혼합 용액의 액성"
+                        ),
+                    ],
+                )
+            )
+
+            st.altair_chart(
+                (line + points).interactive(), use_container_width=True
+            )
+            st.info(
+                f"💡 **{other_ion_col}가 {input_count}개**일 때 중화점(🟢 중성)에 도달하며, 이후에는 기준 이온이 모두 소모되어 물 분자 수가 더 이상 증가하지 않습니다."
+            )
