@@ -63,12 +63,12 @@ with col2:
         st.session_state.selected_ion = "수산화 이온 (OH⁻)"
         st.rerun()
 
-# 3. 이온 개수 입력
-st.write("### 2. 이온 개수를 입력하세요")
+# 3. 이온 개수 입력 (0 이상 10 이하로 제한)
+st.write("### 2. 이온 개수를 입력하세요 (0 ~ 10개)")
 input_count = st.number_input(
     "개수 입력",
-    min_value=1,
-    max_value=20,
+    min_value=0,
+    max_value=10,
     value=5,
     step=1,
     label_visibility="collapsed",
