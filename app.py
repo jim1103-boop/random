@@ -28,7 +28,7 @@ def calculate(h: int, oh: int) -> tuple[int, str]:
     return water, acidity
 
 
-# 이온 선택 버튼 & 화면 전체(vw, vh)로 시원하게 퍼지는 물방울(💧) CSS
+# 이온 선택 버튼 & 화면 전체로 퍼지는 물방울(💧) + 중화열(🔥) 애니메이션 CSS
 st.markdown(
     """
 <style>
@@ -39,6 +39,7 @@ div[data-testid="column"] button {
     border-radius: 14px !important;
 }
 
+/* 물방울과 불꽃이 화면 전체로 퍼지는 애니메이션 */
 @keyframes fullScreenBurst {
     0% {
         transform: translate(-50%, -50%) scale(0.4);
@@ -53,7 +54,7 @@ div[data-testid="column"] button {
     }
 }
 
-.water-burst {
+.reaction-burst {
     position: fixed;
     left: 50%;
     top: 50%;
@@ -62,13 +63,35 @@ div[data-testid="column"] button {
     pointer-events: none;
     animation: fullScreenBurst 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* 중화열로 인해 화면 전체가 잠깐 따뜻하게 붉어졌다 식는 열기 파동 */
+@keyframes heatWave {
+    0% {
+        opacity: 0;
+    }
+    30% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+.heat-overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(255, 87, 34, 0.35) 0%, rgba(255, 152, 0, 0.15) 55%, transparent 100%);
+    z-index: 9998;
+    pointer-events: none;
+    animation: heatWave 1.8s ease-out forwards;
+}
 </style>
 """,
     unsafe_allow_html=True,
 )
 
 st.title("🧪 산·염기 중화 반응 탐구 시뮬레이터")
-st.latex(r"\text{H}^+ + \text{OH}^- \longrightarrow \text{H}_2\text{O}")
+st.latex(r"\text{H}^+ + \text{OH}^- \longrightarrow \text{H}_2\text{O} + \text{열(중화열)}")
 
 if "selected_ion" not in st.session_state:
     st.session_state.selected_ion = "수소 이온 (H⁺)"
@@ -104,9 +127,8 @@ with st.container(border=True):
     st.write("")
     clicked = st.button("🔍 알아보기", type="primary", use_container_width=True)
 
-# 4. 버튼 클릭 시: 게이지 100% 완료 후 화면 전체로 물방울이 짜잔! 퍼짐
+# 4. 버튼 클릭 시: 게이지 100% 완료 후 물방울(💧)과 중화열(🔥)이 화면 전체로 퍼짐
 if clicked:
-    # 게이지가 0%부터 100%까지 부드럽게 끝까지 차오름
     progress_bar = st.progress(0, text="🧪 H⁺와 OH⁻가 반응하는 중... (0%)")
     for percent in range(1, 101):
         time.sleep(0.012)
@@ -117,23 +139,25 @@ if clicked:
     time.sleep(0.2)
     progress_bar.empty()
 
-    # 360도 전 방향으로 3겹(안쪽/중간/바깥쪽) 총 36개 물방울이 화면 전체(vw, vh)로 퍼짐
-    burst_divs = []
+    # 화면 전체에 따뜻한 열기 배경(heat-overlay) + 물방울(💧)과 열(🔥) 입자 36개 확산
+    burst_divs = ['<div class="heat-overlay"></div>']
     for ring_idx, (count, dist_x, dist_y, delay) in enumerate([
         (10, 22, 22, 0.0),    # 안쪽 원
         (12, 38, 38, 0.08),   # 중간 원
-        (14, 55, 55, 0.15),   # 바깥쪽 큰 원 (화면 끝까지 도달)
+        (14, 55, 55, 0.15),   # 바깥쪽 큰 원
     ]):
         for i in range(count):
             angle = (2 * math.pi / count) * i + (ring_idx * 0.3)
             dx = f"{math.cos(angle) * dist_x:.1f}vw"
             dy = f"{math.sin(angle) * dist_y:.1f}vh"
+            # 물방울(💧)과 열(🔥)이 번갈아 가며 퍼짐
+            icon = "💧" if i % 2 == 0 else "🔥"
             burst_divs.append(
-                f'<div class="water-burst" style="--dx:{dx}; --dy:{dy}; animation-delay:{delay}s;">💧</div>'
+                f'<div class="reaction-burst" style="--dx:{dx}; --dy:{dy}; animation-delay:{delay}s;">{icon}</div>'
             )
 
     st.markdown("".join(burst_divs), unsafe_allow_html=True)
-    st.toast("물(H₂O) 분자가 생성되었습니다.", icon="💧")
+    st.toast("중화 반응 완료! 물(H₂O) 분자와 중화열이 발생했습니다.", icon="🔥")
 
     results = []
     other_ion_col = "OH⁻" if is_h else "H⁺"
@@ -234,5 +258,5 @@ if clicked:
                 (line + points).interactive(), use_container_width=True
             )
             st.info(
-                f"💡 **{other_ion_col}가 {input_count}개**일 때 중화점(🟢 중성)에 도달하며, 이후에는 기준 이온이 모두 소모되어 물 분자 수가 더 이상 증가하지 않습니다."
+                f"💡 **{other_ion_col}가 {input_count}개**일 때 중화점(🟢 중성)에 도달하며, 중화열 발생량도 최대가 됩니다."
             )
